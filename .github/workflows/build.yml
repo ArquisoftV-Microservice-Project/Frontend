@@ -60,7 +60,14 @@ jobs:
         run: |
           IMAGE_PATH=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend
           docker push $IMAGE_PATH:latest
-          docker push $IMAGE_PATH:$IMAGE_TAG
+          docker push $IMAGE_PATH:$IMAGE_TAG}
+
+      - id: "get-credentials"
+        uses: "google-github-actions/get-gke-credentials@v2"
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ vars.GCP_ZONE }}
 
       - name: Update Kubernetes deployment with new image
         run: |
