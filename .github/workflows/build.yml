@@ -72,5 +72,5 @@ jobs:
       - name: Update Kubernetes deployment with new image
         run: |
           kubectl set image deployment/frontend \
-            frontend=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend:$IMAGE_TAG \
+            frontend-container=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend:$IMAGE_TAG \
             -n frontend
