@@ -52,13 +52,13 @@ jobs:
           docker push $IMAGE_PATH:latest
           docker push $IMAGE_PATH:$IMAGE_TAG
 
-      - name: Check if deployment exists
+      - name: Check if deployment exists and update if it does
         run: |
-          kubectl get deployment frontend -n frontend || exit 0
-
-      - name: Update Kubernetes deployment with new image
-        if: success()
-        run: |
-          kubectl set image deployment/${{ vars.IMAGE_NAME }} \
-            ${{ vars.IMAGE_NAME }}-container=${{ vars.GCP_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME }}:$IMAGE_TAG \
-            -n frontend
+          if kubectl get deployment frontend -n frontend &>/dev/null; then
+            kubectl set image deployment/${{ vars.IMAGE_NAME }} \
+              ${{ vars.IMAGE_NAME }}-container=${{ vars.GCP_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME }}:$IMAGE_TAG \
+              -n frontend
+            echo "Deployment updated successfully"
+          else
+            echo "Deployment frontend does not exist in namespace frontend. Skipping update."
+          fi
