@@ -37,15 +37,14 @@ jobs:
       - name: "Use gcloud CLI"
         run: |
           gcloud info
-          gcloud auth activate-service-account --key-file=terraform-key.json
           gcloud auth configure-docker ${{ vars.GCP_ZONE }}-docker.pkg.dev
 
-      - name: Set image tags
-        run: |
-          TIMESTAMP=$(date -u +'%Y%m%d-%H%M%S')
-          # Reemplaza '/' por '-' en el nombre de la rama para evitar errores en el tag
-          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '/' '-')
-          echo "IMAGE_TAG=${BRANCH_NAME}-${TIMESTAMP}" >> $GITHUB_ENV
+      # - name: Set image tags
+      #   run: |
+      #     TIMESTAMP=$(date -u +'%Y%m%d-%H%M%S')
+      #     # Reemplaza '/' por '-' en el nombre de la rama para evitar errores en el tag
+      #     BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '/' '-')
+      #     echo "IMAGE_TAG=${BRANCH_NAME}-${TIMESTAMP}" >> $GITHUB_ENV
 
       # - name: Build Docker images
       #   run: |
