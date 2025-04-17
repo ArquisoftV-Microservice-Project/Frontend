@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -15,14 +12,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set environment variables
-        run: |
-          echo "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" >> $GITHUB_ENV
-
-      - name: Set up GCP credentials
-        run: |
-          echo "${{ secrets.GCP_SA_CREDENTIALS }}" > terraform-key.json
 
       - id: "auth"
         uses: "google-github-actions/auth@v2"
@@ -36,26 +25,7 @@ jobs:
 
       - name: "Use gcloud CLI"
         run: |
-          gcloud info
           gcloud auth configure-docker ${{ vars.GCP_ZONE }}-docker.pkg.dev
-
-      # - name: Set image tags
-      #   run: |
-      #     TIMESTAMP=$(date -u +'%Y%m%d-%H%M%S')
-      #     # Reemplaza '/' por '-' en el nombre de la rama para evitar errores en el tag
-      #     BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '/' '-')
-      #     echo "IMAGE_TAG=${BRANCH_NAME}-${TIMESTAMP}" >> $GITHUB_ENV
-
-      # - name: Build Docker images
-      #   run: |
-      #     IMAGE_PATH=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend
-      #     docker build -t $IMAGE_PATH:latest -t $IMAGE_PATH:$IMAGE_TAG .
-
-      # - name: Push Docker images
-      #   run: |
-      #     IMAGE_PATH=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend
-      #     docker push $IMAGE_PATH:latest
-      #     docker push $IMAGE_PATH:$IMAGE_TAG
 
       - id: "get-credentials"
         uses: "google-github-actions/get-gke-credentials@v2"
@@ -64,16 +34,31 @@ jobs:
           cluster_name: ${{ secrets.GKE_CLUSTER }}
           location: ${{ vars.GCP_ZONE }}
 
-      # - name: Check if deployment exists
-      #   run: |
-      #     kubectl get deployment frontend -n frontend || exit 0
-
-      # - name: Update Kubernetes deployment with new image
-      #   if: success()  # Este paso solo se ejecuta si el paso anterior fue exitoso
-      #   run: |
-      #     kubectl set image deployment/frontend \
-      #       frontend-container=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend:$IMAGE_TAG \
-      #       -n frontend
-      - name: cleanup
+      - name: Set image tags
         run: |
-          rm terraform-key.json
+          TIMESTAMP=$(date -u +'%Y%m%d-%H%M%S')
+          # Reemplaza '/' por '-' en el nombre de la rama para evitar errores en el tag
+          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '/' '-')
+          echo "IMAGE_TAG=${BRANCH_NAME}-${TIMESTAMP}" >> $GITHUB_ENV
+
+      - name: Build Docker images
+        run: |
+          IMAGE_PATH=${{ vars.GCP_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME }}
+          docker build -t $IMAGE_PATH:latest -t $IMAGE_PATH:$IMAGE_TAG .
+
+      - name: Push Docker images
+        run: |
+          IMAGE_PATH=${{ vars.GCP_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME }}
+          docker push $IMAGE_PATH:latest
+          docker push $IMAGE_PATH:$IMAGE_TAG
+
+      - name: Check if deployment exists
+        run: |
+          kubectl get deployment frontend -n frontend || exit 0
+
+      - name: Update Kubernetes deployment with new image
+        if: success()
+        run: |
+          kubectl set image deployment/${{ vars.IMAGE_NAME }} \
+            ${{ vars.IMAGE_NAME }}-container=${{ vars.GCP_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME }}:$IMAGE_TAG \
+            -n frontend
