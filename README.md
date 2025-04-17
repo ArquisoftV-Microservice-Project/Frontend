@@ -61,21 +61,6 @@ This project includes a `Dockerfile` that packages the Vue.js app for production
 
 ## 🖥️ Local Development
 
-To run the project locally:
-
-```bash
-npm install
-npm run dev
-```
-
-````
-
-¿Querés que también traduzca la parte de "Build para producción" y "Licencia", o te sirve hasta acá?
-
----
-
-## 🖥️ Desarrollo local
-
 UI for sample distributed TODO application.
 
 ## Configuration
@@ -92,7 +77,7 @@ npm install
 
 # build application
 npm run build
-````
+```
 
 ## Running
 
