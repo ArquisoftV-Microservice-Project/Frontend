@@ -22,16 +22,12 @@ jobs:
 
       - name: Set up GCP credentials
         run: |
-          echo "${{ secrets.GCP_SA_KEY_B64 }}" | base64 -d > terraform-key.json
-          echo 'GCP_CREDENTIALS<<EOF' >> $GITHUB_ENV
-          cat terraform-key.json >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/terraform-key.json" >> $GITHUB_ENV
+          echo "${{ secrets.GCP_SA_CREDENTIALS }}" | base64 -d > terraform-key.json
 
       - id: "auth"
         uses: "google-github-actions/auth@v2"
         with:
-          credentials_json: ${{ env.GCP_CREDENTIALS }}
+          credentials_json: ${{ secrets.GCP_SA_CREDENTIALS }}
 
       - name: "Set up Cloud SDK"
         uses: "google-github-actions/setup-gcloud@v2"
@@ -51,16 +47,16 @@ jobs:
           BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '/' '-')
           echo "IMAGE_TAG=${BRANCH_NAME}-${TIMESTAMP}" >> $GITHUB_ENV
 
-      - name: Build Docker images
-        run: |
-          IMAGE_PATH=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend
-          docker build -t $IMAGE_PATH:latest -t $IMAGE_PATH:$IMAGE_TAG .
+      # - name: Build Docker images
+      #   run: |
+      #     IMAGE_PATH=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend
+      #     docker build -t $IMAGE_PATH:latest -t $IMAGE_PATH:$IMAGE_TAG .
 
-      - name: Push Docker images
-        run: |
-          IMAGE_PATH=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend
-          docker push $IMAGE_PATH:latest
-          docker push $IMAGE_PATH:$IMAGE_TAG
+      # - name: Push Docker images
+      #   run: |
+      #     IMAGE_PATH=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend
+      #     docker push $IMAGE_PATH:latest
+      #     docker push $IMAGE_PATH:$IMAGE_TAG
 
       - id: "get-credentials"
         uses: "google-github-actions/get-gke-credentials@v2"
@@ -69,8 +65,16 @@ jobs:
           cluster_name: ${{ secrets.GKE_CLUSTER }}
           location: ${{ vars.GCP_ZONE }}
 
-      - name: Update Kubernetes deployment with new image
+      # - name: Check if deployment exists
+      #   run: |
+      #     kubectl get deployment frontend -n frontend || exit 0
+
+      # - name: Update Kubernetes deployment with new image
+      #   if: success()  # Este paso solo se ejecuta si el paso anterior fue exitoso
+      #   run: |
+      #     kubectl set image deployment/frontend \
+      #       frontend-container=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend:$IMAGE_TAG \
+      #       -n frontend
+      - name: cleanup
         run: |
-          kubectl set image deployment/frontend \
-            frontend-container=${{ vars.GCP_ZONE }}-docker.pkg.dev/$GCP_PROJECT/${{ vars.REGISTRY }}/frontend:$IMAGE_TAG \
-            -n frontend
+          rm terraform-key.json
