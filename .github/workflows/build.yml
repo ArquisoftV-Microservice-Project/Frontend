@@ -60,5 +60,5 @@ jobs:
               -n frontend
             echo "Deployment updated successfully"
           else
-            echo "Deployment frontend does not exist in namespace frontend. Skipping update."
+            echo "Deployment ${{ vars.IMAGE_NAME }} does not exist in namespace frontend. Skipping update."
           fi
