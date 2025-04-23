@@ -1,6 +1,6 @@
 # 📄 CHANGELOG
 
-## [1.0.1] - 2025-04-23
+## [1.0.2] - 2025-04-23
 
 ### 🎉 Added
 - Feature de release por commit arreglada
