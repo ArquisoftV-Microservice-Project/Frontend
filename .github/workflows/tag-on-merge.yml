@@ -1,0 +1,14 @@
+name: Auto Tag and Release on Merge to Main
+on:
+  push:
+    branches:
+      - main
+jobs:
+  call-tagging-workflow:
+    uses: ArquisoftV-Microservice-Project/devops-workflows/.github/workflows/auto-tag.yml@main
+    with:
+      prefix: 'v'
+      bump_pattern: 'release:[ ]*(major|minor|patch)'
+      default_bump: 'patch'
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
