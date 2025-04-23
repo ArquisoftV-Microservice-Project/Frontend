@@ -10,7 +10,5 @@ jobs:
       prefix: 'v'
       bump_pattern: 'release:[ ]*(major|minor|patch)'
       default_bump: 'patch'
-      release_name_prefix: 'Release '
-      release_body_prefix: 'Automatic release created from commit: '
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
