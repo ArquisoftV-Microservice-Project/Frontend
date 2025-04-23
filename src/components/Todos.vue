@@ -6,7 +6,7 @@
       <div class="row">
         <div class="col-sm-12 text-left">
         <h1>
-          TODOs
+          TODOs Personalizado camvbio en el titulo.
           <transition name="fade">
             <small v-if="total">({{ total }})</small>
           </transition>
